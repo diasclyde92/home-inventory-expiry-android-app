@@ -1,0 +1,10 @@
+Dashboard: “Expiring in 7 days”, “Expired”, “Recently added”
+Notifications/reminders
+Barcode/QR scanning later
+OCR from product packaging to reduce manual entry
+Quick “I used this up” action
+Multiple photos per item
+Location hierarchy, rather than one giant text field
+Backup/sync across devices
+Export/import data
+Household/shared access later

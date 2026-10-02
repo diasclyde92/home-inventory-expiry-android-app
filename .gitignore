@@ -1,0 +1,31 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+*.keystore
+*.jks
+
+# Local secrets
+local.properties
+*.jks
+*.keystore
+
+# Android/Gradle generated files
+.gradle/
+build/
+**/build/
+
+# IDE
+.idea/
+*.iml
+
+# Generated Kotlin/Android files
+.kotlin/
+
+.gradle-user/

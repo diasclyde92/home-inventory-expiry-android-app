@@ -1,0 +1,9 @@
+Main production gaps:
+- Local inventory database and photos are not encrypted. Fine for a personal prototype, but users may store medicines, documents, or sensitive notes.
+- Android backup is currently enabled, so inventory data may be included in the device’s cloud backup. This should be deliberately configured or disabled.
+- Notifications can reveal item names on the lock screen; users should be able to choose notification privacy.
+- The database uses destructive migrations, meaning a future database upgrade could erase local data if not handled carefully.
+- No release hardening yet: release signing setup, code shrinking/obfuscation, versioning, crash reporting strategy, and tested upgrade paths.
+- The icon works, but it should ideally be packaged as a proper adaptive icon for consistent Android launcher rendering.
+- The app needs device testing: rotation, permission denial, gallery/camera behavior, notification scheduling, Android 13–15 notification behavior, and app updates without data loss.
+- Play Store submission also needs a privacy policy and accurate Data Safety disclosure, even for an offline-first app.

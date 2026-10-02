@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Legacy full backup exclusions -->
+    <exclude domain="database" />
+    <exclude domain="file" path="images" />
+    <exclude domain="sharedpref" path="expiry_notifications.xml" />
+</full-backup-content>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Disallow cloud backup of inventory database, private photos, and notification caches -->
+        <exclude domain="database" />
+        <exclude domain="file" path="images" />
+        <exclude domain="sharedpref" path="expiry_notifications.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <!-- Disallow unencrypted extraction/transfer -->
+        <exclude domain="database" />
+        <exclude domain="file" path="images" />
+        <exclude domain="sharedpref" path="expiry_notifications.xml" />
+    </device-transfer>
+</data-extraction-rules>
