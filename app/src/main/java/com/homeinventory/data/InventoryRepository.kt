@@ -33,6 +33,38 @@ class InventoryRepository(private val dao: InventoryDao, private val context: Co
  suspend fun deleteCategory(category: CategoryEntity, replacement: Long) { dao.moveItems(category.id, replacement); dao.deleteCategory(category) }
  suspend fun used(id: Long) = dao.itemCount(id)
 
+ suspend fun migrateLegacyPhotoUris() = withContext(Dispatchers.IO) {
+  try {
+   val photos = dao.getAllPhotos()
+   val appFileAuthority = "${context.packageName}.files"
+   for (photo in photos) {
+    val parsed = Uri.parse(photo.uri)
+    // Only migrate external content:// URIs that don't belong to the app's FileProvider
+    if (parsed.scheme == "content" && parsed.authority != appFileAuthority) {
+     try {
+      val imagesDir = File(context.filesDir, "images").apply { mkdirs() }
+      val targetFile = File(imagesDir, "MIG_${System.currentTimeMillis()}_${java.util.UUID.randomUUID().toString().take(8)}.jpg")
+      val copied = context.contentResolver.openInputStream(parsed)?.use { input ->
+       targetFile.outputStream().use { output ->
+        input.copyTo(output)
+       }
+       true
+      } ?: false
+
+      if (copied && targetFile.length() > 0) {
+       val newUri = androidx.core.content.FileProvider.getUriForFile(context, appFileAuthority, targetFile).toString()
+       dao.updatePhotoUri(photo.id, newUri)
+      } else {
+       targetFile.delete()
+      }
+     } catch (_: Exception) {
+      // Inaccessible, revoked, or unreadable legacy URI: gracefully leave as-is without crashing
+     }
+    }
+   }
+  } catch (_: Exception) {}
+ }
+
  private suspend fun cleanupUnusedFiles(uris: List<String>) = withContext(Dispatchers.IO) {
   uris.forEach { uriString ->
    try {

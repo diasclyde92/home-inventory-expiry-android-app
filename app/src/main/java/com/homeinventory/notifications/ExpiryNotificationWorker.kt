@@ -18,8 +18,11 @@ import java.util.concurrent.TimeUnit
 
 class ExpiryNotificationWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
-        val items = InventoryDatabase.create(applicationContext).dao().observeItems().first()
+        val items = InventoryDatabase.getInstance(applicationContext).dao().observeItems().first()
         val preferences = applicationContext.getSharedPreferences("expiry_notifications", Context.MODE_PRIVATE)
+        if (!NotificationManagerCompat.from(applicationContext).areNotificationsEnabled()) {
+            return Result.success()
+        }
         createChannel(applicationContext)
         items.forEach { row ->
             val status = expiryStatus(row.item.expiryDate)
@@ -27,11 +30,29 @@ class ExpiryNotificationWorker(context: Context, params: WorkerParameters) : Cor
             val key = "${row.item.id}_${status.name}_${row.item.expiryDate}"
             if (preferences.getBoolean(key, false)) return@forEach
             val message = if (status == ExpiryStatus.SOON) "${row.item.name} expires within 7 days." else "${row.item.name} has expired."
-            NotificationManagerCompat.from(applicationContext).notify(row.item.id.toInt() * 10 + status.ordinal, NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_dialog_info)
+
+            val publicNotification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+                .setSmallIcon(com.homeinventory.R.drawable.ic_notification_expiry)
+                .setContentTitle("Inventory alert")
+                .setContentText(if (status == ExpiryStatus.SOON) "An item is expiring soon." else "An item has expired.")
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .build()
+
+            val privateNotification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+                .setSmallIcon(com.homeinventory.R.drawable.ic_notification_expiry)
                 .setContentTitle(if (status == ExpiryStatus.SOON) "Item expiring soon" else "Item expired")
-                .setContentText(message).setPriority(NotificationCompat.PRIORITY_HIGH).setAutoCancel(true).build())
-            preferences.edit().putBoolean(key, true).apply()
+                .setContentText(message)
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setPublicVersion(publicNotification)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .build()
+
+            try {
+                NotificationManagerCompat.from(applicationContext).notify(row.item.id.toInt() * 10 + status.ordinal, privateNotification)
+                preferences.edit().putBoolean(key, true).apply()
+            } catch (_: SecurityException) {}
         }
         return Result.success()
     }

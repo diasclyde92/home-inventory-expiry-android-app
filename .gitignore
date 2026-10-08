@@ -29,3 +29,8 @@ build/
 .kotlin/
 
 .gradle-user/
+
+# Release artifacts
+app/release/
+*.aab
+*.apk

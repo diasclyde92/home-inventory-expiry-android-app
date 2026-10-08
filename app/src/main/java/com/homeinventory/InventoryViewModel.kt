@@ -7,9 +7,15 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class InventoryViewModel(application: Application): AndroidViewModel(application) {
- private val repo = InventoryRepository(InventoryDatabase.create(application).dao(), application)
+ private val repo = InventoryRepository(InventoryDatabase.getInstance(application).dao(), application)
  val items = repo.items.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
  val categories = repo.categories.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+ init {
+  viewModelScope.launch {
+   repo.migrateLegacyPhotoUris()
+  }
+ }
  fun item(id:Long) = repo.item(id)
  fun save(item:ItemEntity, photos:List<String>, done:(Long)->Unit) = viewModelScope.launch { done(repo.save(item,photos)) }
  fun delete(item:ItemEntity, done:()->Unit={}) = viewModelScope.launch { repo.delete(item); done() }

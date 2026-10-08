@@ -26,13 +26,21 @@ data class ItemWithPhotos(@Embedded val item: ItemEntity, @Relation(parentColumn
  @Query("DELETE FROM photos WHERE itemId=:itemId") suspend fun clearPhotos(itemId: Long)
  @Query("SELECT * FROM photos WHERE itemId=:itemId") suspend fun getPhotosByItemId(itemId: Long): List<PhotoEntity>
  @Query("SELECT COUNT(*) FROM photos WHERE uri=:uri") suspend fun photoUriCount(uri: String): Int
+ @Query("SELECT * FROM photos") suspend fun getAllPhotos(): List<PhotoEntity>
+ @Query("UPDATE photos SET uri=:newUri WHERE id=:id") suspend fun updatePhotoUri(id: Long, newUri: String)
 }
 @Database(entities = [CategoryEntity::class, ItemEntity::class, PhotoEntity::class], version = 1) abstract class InventoryDatabase: RoomDatabase() { abstract fun dao(): InventoryDao
  companion object {
-  fun create(context: Context) = Room.databaseBuilder(context, InventoryDatabase::class.java, "inventory.db")
-   // To safeguard user inventory, destructive migration fallback is removed.
-   // Explicit Migration objects must be registered via .addMigrations(...) when incrementing version.
-   .build()
+  @Volatile private var INSTANCE: InventoryDatabase? = null
+
+  fun getInstance(context: Context): InventoryDatabase =
+   INSTANCE ?: synchronized(this) {
+    INSTANCE ?: Room.databaseBuilder(
+     context.applicationContext,
+     InventoryDatabase::class.java,
+     "inventory.db"
+    ).build().also { INSTANCE = it }
+   }
  }
 }
 
